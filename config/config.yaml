@@ -13,10 +13,10 @@ model:
 
     train: 
         device: cuda
-        epochs: 135
+        epochs: 100
         optimizer: 
             _target_: torch.optim.Adam
-            lr: 2e-3
+            lr: 10e-4
             weight_decay: 0.00005
 
         loss:
@@ -26,7 +26,7 @@ model:
             noobj_lambda: 0.5
 
         dataset:
-            batch_size: 64
+            batch_size: 32
             pin_memory: false
             shuffle: true
             drop_last: true

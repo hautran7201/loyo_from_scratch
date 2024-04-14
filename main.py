@@ -14,6 +14,7 @@ from torch.optim.lr_scheduler import LambdaLR
 from dataset import VOCDataset
 from omegaconf import DictConfig
 from model import YoloV1
+from raw_model import Yolov1
 from loss import YoloV1Loss
 from utils import (cellboxes_to_boxes, non_max_suppression, plot_image, get_bboxes, mean_average_precision)
 
@@ -61,6 +62,7 @@ def main(config: DictConfig) -> None:
 
         # Model 
         Model = YoloV1(config.model).to(device)
+        Model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(device)
 
         # Loss
         Loss = YoloV1Loss(config.model.train.loss)
@@ -83,7 +85,7 @@ def main(config: DictConfig) -> None:
             else:
                 lbd = 0.1
             return lbd
-        lr_scheduler = lr_scheduler.LambdaLR(optimizer, lambda_lr)
+        scheduler = LambdaLR(optimizer, lambda_lr)
 
         # Train 
         log = {}
@@ -110,7 +112,7 @@ def main(config: DictConfig) -> None:
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-                lr_scheduler.step()
+                scheduler.step()
                 
                 pbar.set_description(
                     f'Iteration {idx:05d}:' 
