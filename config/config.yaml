@@ -1,0 +1,65 @@
+output_subdir: null
+
+model:
+    B: 2 # Number of bouding box per grid cell
+    C: 20 # Number of class for classify task 
+    in_channels: 3
+    fc_hidden_feature: 4096    
+
+    do:
+        training: true
+        evaluating: false
+        inference: false
+
+    train: 
+        device: cuda
+        epochs: 135
+        optimizer: 
+            _target_: torch.optim.Adam
+            lr: 2e-3
+            weight_decay: 0.00005
+
+        loss:
+            B: ${model.B}
+            C: ${model.C}
+            coord_lambda: 5.0
+            noobj_lambda: 0.5
+
+        dataset:
+            batch_size: 64
+            pin_memory: false
+            shuffle: true
+            drop_last: true
+            train_data:
+                _target_: dataset.VOCDataset
+                csv_file: data/train.csv
+                label_dir: data/labels
+                image_dir: data/images
+            test_data:
+                _target_: dataset.VOCDataset
+                csv_file: data/test.csv
+                label_dir: data/labels
+                image_dir: data/images
+    
+    evaluate:
+        device: cuda
+
+        pretrained_path: log/01-04-2024/11-02
+
+        dataset:
+            batch_size: 64
+            pin_memory: false
+            shuffle: true
+            drop_last: true
+            test_data:
+                _target_: dataset.VOCDataset
+                csv_file: data/test.csv
+                label_dir: data/labels
+                image_dir: data/images
+
+    log:
+        _target_: utils.save_model
+        log_dir: log 
+        save_weight_only: true
+        overwrite_dir: true
+  
