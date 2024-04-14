@@ -18,18 +18,31 @@ from raw_model import Yolov1
 from loss import YoloV1Loss
 from utils import (cellboxes_to_boxes, non_max_suppression, plot_image, get_bboxes, mean_average_precision)
 
+
+class Compose(object):
+    def __init__(self, transforms):
+        self.transforms = transforms
+
+    def __call__(self, img, bboxes):
+        for t in self.transforms:
+            img, bboxes = t(img), bboxes
+
+        return img, bboxes
+
+
 @hydra.main(version_base=None)
 def main(config: DictConfig) -> None:
     # Device
     device = config.model.train.device
 
     # Transforms
-    transform = transforms.Compose(
+    """transform = transforms.Compose(
         [
             transforms.Resize((448, 448)), 
             transforms.ToTensor()
         ]
-    )
+    )"""
+    transform = Compose([transforms.Resize((448, 448)), transforms.ToTensor(),])
 
     if config.model.do.training:
         print('--> Start training\n')
@@ -44,7 +57,7 @@ def main(config: DictConfig) -> None:
             data_config.test_data,
             transform=transform
         )
-        subset_sampler = SubsetRandomSampler(range(1000))
+        subset_sampler = SubsetRandomSampler(range(500))
         train_dataloader = DataLoader(
             train_dataset,
             shuffle=data_config.shuffle,
@@ -61,7 +74,7 @@ def main(config: DictConfig) -> None:
         )
 
         # Model 
-        Model = YoloV1(config.model).to(device)
+        # Model = YoloV1(config.model).to(device)
         Model = Yolov1(split_size=7, num_boxes=2, num_classes=20).to(device)
 
         # Loss
@@ -115,7 +128,8 @@ def main(config: DictConfig) -> None:
                 scheduler.step()
                 
                 pbar.set_description(
-                    f'Iteration {idx:05d}:' 
+                    f'Epoch {epoch:03d}'
+                    + f'Iteration {idx:05d}:' 
                     + f'loss: {sum(mean_loss)/len(mean_loss)}'
                 )
 
