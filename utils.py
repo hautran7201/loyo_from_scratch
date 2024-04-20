@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 import pytz
 import numpy as np
 import matplotlib.patches as patches
@@ -11,6 +12,21 @@ from tqdm import tqdm
 from omegaconf import OmegaConf
 from datetime import datetime
 from collections import Counter
+
+
+class Squeeze(nn.Module):
+    def __init__(self):
+        super(Squeeze, self).__init__()
+
+    def forward(self, x):
+        return x.squeeze()
+
+class Flatten(nn.Module):
+    def __init__(self):
+        super(Flatten, self).__init__()
+
+    def forward(self, x):
+        return x.view(x.size(0), -1)
 
 
 def intersection_over_union(boxes_preds, boxes_labels, box_format="midpoint"):
@@ -360,18 +376,14 @@ def day_time(timezone='Asia/Ho_Chi_Minh'):
 
     return formatted_date, formatted_time
 
-def save_model(model=None, loss: dict=None, log_dir:str=None, save_weight_only:bool=False, overwrite_dir:bool=False):
-    day, time = day_time()
-
+def save_model(model=None, loss: dict=None, log_name:str=None, save_weight_only:bool=False, overwrite_dir:bool=False):
     # Check dir
-    log_dir = os.path.join(log_dir, day)
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    if not os.path.exists(log_name):
+        os.makedirs(log_name)
     elif overwrite_dir:
-        shutil.rmtree(log_dir)
-        os.makedirs(log_dir)
-
-    log_name = os.path.join(log_dir, time)
+        shutil.rmtree(log_name)
+        os.makedirs(log_name)
+    
     if not os.path.exists(log_name):
         os.makedirs(log_name)
 

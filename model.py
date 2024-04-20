@@ -4,115 +4,50 @@ import hydra
 import os
 from omegaconf import OmegaConf 
 
-def architecture(in_channels, fc_hidden_feature, fc_depth_feature):
-    output = [
-        # Stage 1
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': in_channels, 'out_channels': 64, 'kernel_size': 7, 'stride': 2, 'padding': 3},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.MaxPool2d', 'kernel_size': 2, 'stride': 2},
-
-        # Stage 2
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 64, 'out_channels': 192, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.MaxPool2d', 'kernel_size': 2, 'stride': 2},
-
-        # Stage 3
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 192, 'out_channels': 128, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 128, 'out_channels': 256, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 256, 'out_channels': 256, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 256, 'out_channels': 512, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.MaxPool2d', 'kernel_size': 2, 'stride': 2},
-
-        # Stage 4
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 256, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 256, 'out_channels': 512, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        # 
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 256, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 256, 'out_channels': 512, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        # 
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 256, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 256, 'out_channels': 512, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        #
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 256, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 256, 'out_channels': 512, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-          
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 512, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 1024, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.MaxPool2d', 'kernel_size': 2, 'stride': 2},
-
-        # Stage 5
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 1024, 'out_channels': 512, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 1024, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        #
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 1024, 'out_channels': 512, 'kernel_size': 1, 'stride': 1, 'padding': 0},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 512, 'out_channels': 1024, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 1024, 'out_channels': 1024, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 1024, 'out_channels': 1024, 'kernel_size': 3, 'stride': 2, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-
-        # Stage 6
-        {'_target_': 'torch.nn.Conv2d', 'in_channels': 1024, 'out_channels': 1024, 'kernel_size': 3, 'stride': 1, 'padding': 1},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-
-        # Stage 7
-        {'_target_': 'torch.nn.Flatten'},
-        {'_target_': 'torch.nn.Linear', 'in_features': 7*7*1024, 'out_features': fc_hidden_feature},
-        {'_target_': 'torch.nn.Dropout', 'p': 0.5},
-        {'_target_': 'torch.nn.LeakyReLU', 'negative_slope': 0.1},
-        {'_target_': 'torch.nn.Linear', 'in_features': fc_hidden_feature, 'out_features': 7*7*fc_depth_feature},
-    ]
-
-    return output
-
 
 class YoloV1(nn.Module):
-    def __init__(self, config):
+    def __init__(self, S, B, C, features):
         super().__init__()
 
-        self.depth = 5*config.B + config.C
-        self.in_channels = config.in_channels
+        self.S = S # Grid size
+        self.B = B # Number of bounding box
+        self.C = C # Number of class
 
-        self.architecture = architecture(
-            self.in_channels,
-            config.fc_hidden_feature,
-            self.depth,
+        # Darknet model
+        self.features = features
+
+        # Yolo model
+        self.con_layers = self.make_conv_layers()
+        self.fc_layers = self.make_fc_layers()
+
+
+    def make_conv_layers(self):
+        conv = nn.Sequential(
+            nn.Conv2d(1024, 1024, 3, padding=1), 
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(1024, 1024, 3, stride=2, padding=1), 
+            nn.LeakyReLU(0.1, inplace=True),
+
+            nn.Conv2d(1024, 1024, 3, padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Conv2d(1024, 1024, 3, padding=1),
+            nn.LeakyReLU(0.1, inplace=True),
         )
-        
-        self.block = [
-            hydra.utils.instantiate(
-                self.architecture[0],
-                in_channels=self.in_channels
-            )                
-        ]
 
-        for layer in self.architecture[1:]:
-            self.block.append(
-                hydra.utils.instantiate(
-                    layer
-                )
-            )
+        return conv
+    
+    def make_fc_layers(self):
+        net = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(self.S * self.S * 1024, 4086),
+            nn.LeakyReLU(0.1, inplace=True),
+            nn.Dropout(0.5),
+            nn.Linear(4096, self.S * self.S * (self.B*2 + self.C)),
+            nn.Sigmoid()
+        )
 
-        self.block = nn.Sequential(*self.block)         
+        return net
+
 
     @staticmethod
     def from_pretrained(path):
@@ -135,7 +70,8 @@ class YoloV1(nn.Module):
         return model
 
     def forward(self, x):
-        # x: (Batch, Feature, Height, Width)
 
-        output = self.block(x)
-        return output
+        x = self.feature(x)
+        x = self.conv_layers(x)
+        x = self.fc_layers(x)
+        return x

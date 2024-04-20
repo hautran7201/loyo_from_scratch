@@ -1,32 +1,26 @@
 output_subdir: null
 
 model:
+    S: 7
     B: 2 # Number of bouding box per grid cell
     C: 20 # Number of class for classify task 
     in_channels: 3
     fc_hidden_feature: 4096    
-
-    do:
-        training: true
-        evaluating: false
-        inference: false
+    wandb: True
 
     train: 
         device: cuda
-        epochs: 100
-        optimizer: 
-            _target_: torch.optim.Adam
-            lr: 10e-4
-            weight_decay: 0.00005
+        epochs: 135
+        lr: 10e-4
+        momentum: 0.9
+        weight_decay: 5.0e-4
 
         loss:
-            B: ${model.B}
-            C: ${model.C}
             coord_lambda: 5.0
             noobj_lambda: 0.5
 
         dataset:
-            batch_size: 32
+            batch_size: 64
             pin_memory: false
             shuffle: true
             drop_last: true
@@ -59,7 +53,6 @@ model:
 
     log:
         _target_: utils.save_model
-        log_dir: log 
         save_weight_only: true
         overwrite_dir: true
   
